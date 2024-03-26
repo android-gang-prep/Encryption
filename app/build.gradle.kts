@@ -77,4 +77,7 @@ dependencies {
     implementation ("androidx.camera:camera-lifecycle:$cameraX")
     implementation ("androidx.camera:camera-view:$cameraX")
 
+    implementation ("androidx.fragment:fragment:1.6.2")
+
+    implementation(libs.zxing.core)
 }

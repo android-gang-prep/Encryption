@@ -44,9 +44,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.PermissionChecker.PERMISSION_GRANTED
+import androidx.fragment.app.FragmentActivity
 import ir.ehsannarmani.encryption.LocalAppState
 import ir.ehsannarmani.encryption.MainActivity
 import ir.ehsannarmani.encryption.R
+import ir.ehsannarmani.encryption.navigation.Routes
 import ir.ehsannarmani.encryption.utils.BiometricUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,7 +59,8 @@ import kotlin.coroutines.suspendCoroutine
 @Composable
 fun ScreenA() {
 
-    val activity = LocalAppState.current.context as MainActivity
+    val appState = LocalAppState.current
+    val activity = appState.context as FragmentActivity
     val biometric = remember {
         BiometricUtils(activity)
     }
@@ -84,6 +87,11 @@ fun ScreenA() {
                     onFinish = {
                         captureRequest.value = false
                         cameraProvider.value?.unbindAll()
+                        appState.navController.navigate(Routes.ScreenB.route){
+                            popUpTo(0){
+                                inclusive = false
+                            }
+                        }
                     }
                 )
             }
@@ -128,6 +136,11 @@ fun ScreenA() {
                                         Toast.LENGTH_SHORT
                                     )
                                     .show()
+                                appState.navController.navigate(Routes.ScreenB.route){
+                                    popUpTo(0){
+                                        inclusive = false
+                                    }
+                                }
                             } else {
                                 Toast
                                     .makeText(

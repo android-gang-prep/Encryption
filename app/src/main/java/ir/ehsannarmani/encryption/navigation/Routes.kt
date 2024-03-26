@@ -1,5 +1,6 @@
 package ir.ehsannarmani.encryption.navigation
 
 enum class Routes(val route:String) {
-    ScreenA(route = "screen-a")
+    ScreenA(route = "screen-a"),
+    ScreenB(route = "screen-b")
 }

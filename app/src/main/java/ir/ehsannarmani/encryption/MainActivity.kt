@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import ir.ehsannarmani.encryption.navigation.Routes
 import ir.ehsannarmani.encryption.screens.ScreenA
+import ir.ehsannarmani.encryption.screens.ScreenB
 import ir.ehsannarmani.encryption.ui.theme.EncryptionTheme
 import ir.ehsannarmani.encryption.utils.BiometricUtils
 
@@ -22,7 +23,7 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            EncryptionTheme {
+            EncryptionTheme(true) {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -30,9 +31,12 @@ class MainActivity : FragmentActivity() {
                 ) {
                     val navController = LocalAppState.current.navController
 
-                    NavHost(navController = navController, startDestination = Routes.ScreenA.route){
+                    NavHost(navController = navController, startDestination = Routes.ScreenB.route){
                         composable(Routes.ScreenA.route){
                             ScreenA()
+                        }
+                        composable(Routes.ScreenB.route){
+                            ScreenB()
                         }
                     }
                 }
