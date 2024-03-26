@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import ir.ehsannarmani.encryption.navigation.Routes
 import ir.ehsannarmani.encryption.screens.ScreenA
 import ir.ehsannarmani.encryption.screens.ScreenB
+import ir.ehsannarmani.encryption.screens.ScreenD
 import ir.ehsannarmani.encryption.ui.theme.EncryptionTheme
 import ir.ehsannarmani.encryption.utils.BiometricUtils
 
@@ -31,12 +32,15 @@ class MainActivity : FragmentActivity() {
                 ) {
                     val navController = LocalAppState.current.navController
 
-                    NavHost(navController = navController, startDestination = Routes.ScreenB.route){
+                    NavHost(navController = navController, startDestination = Routes.ScreenD.route){
                         composable(Routes.ScreenA.route){
                             ScreenA()
                         }
                         composable(Routes.ScreenB.route){
                             ScreenB()
+                        }
+                        composable(Routes.ScreenD.route){
+                            ScreenD()
                         }
                     }
                 }

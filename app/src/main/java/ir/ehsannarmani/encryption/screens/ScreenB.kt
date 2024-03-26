@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ir.ehsannarmani.encryption.navigation.Routes
 import ir.ehsannarmani.encryption.utils.rememberQrBitmapPainter
 import ir.ehsannarmani.encryption.viewModels.ScreenBViewModel
 import ir.ehsannarmani.encryption.viewModels.VOICE_DURATION_LIMIT
@@ -111,7 +112,8 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
                 Text(text = "Scan To Receive", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(18.dp))
                 Button(onClick = {
-                                 qrDialogOpen.value =false
+                    qrDialogOpen.value = false
+                    appState.navController.navigate(Routes.ScreenD.route)
                 }, shape = RoundedCornerShape(8.dp),modifier=Modifier.fillMaxWidth()) {
                     Text(text = "Pick Device")
                 }
