@@ -66,4 +66,15 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    val navVersion = "2.7.7"
+
+    implementation("androidx.navigation:navigation-compose:$navVersion")
+    implementation("androidx.biometric:biometric:1.1.0")
+
+    val cameraX = "1.3.1"
+    implementation ("androidx.camera:camera-camera2:$cameraX")
+    implementation ("androidx.camera:camera-lifecycle:$cameraX")
+    implementation ("androidx.camera:camera-view:$cameraX")
+
 }

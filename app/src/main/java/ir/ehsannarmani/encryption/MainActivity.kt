@@ -10,9 +10,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.FragmentActivity
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import ir.ehsannarmani.encryption.navigation.Routes
+import ir.ehsannarmani.encryption.screens.ScreenA
 import ir.ehsannarmani.encryption.ui.theme.EncryptionTheme
+import ir.ehsannarmani.encryption.utils.BiometricUtils
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -22,7 +28,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    val navController = LocalAppState.current.navController
+
+                    NavHost(navController = navController, startDestination = Routes.ScreenA.route){
+                        composable(Routes.ScreenA.route){
+                            ScreenA()
+                        }
+                    }
                 }
             }
         }
