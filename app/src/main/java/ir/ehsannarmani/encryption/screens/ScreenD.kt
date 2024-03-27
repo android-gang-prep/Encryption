@@ -52,6 +52,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+
+val bluetoothPermissions = arrayOf(
+    android.Manifest.permission.BLUETOOTH_SCAN,
+    android.Manifest.permission.BLUETOOTH_CONNECT,
+    android.Manifest.permission.BLUETOOTH_ADMIN,
+    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+    android.Manifest.permission.ACCESS_FINE_LOCATION,
+)
+
 @SuppressLint("MissingPermission")
 @Composable
 fun ScreenD(viewModel: ScreenDViewModel = viewModel()) {
@@ -80,15 +89,7 @@ fun ScreenD(viewModel: ScreenDViewModel = viewModel()) {
         }
     )
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                android.Manifest.permission.BLUETOOTH_SCAN,
-                android.Manifest.permission.BLUETOOTH_CONNECT,
-                android.Manifest.permission.BLUETOOTH_ADMIN,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-            )
-        )
+        permissionLauncher.launch(bluetoothPermissions)
     }
 
     Column(

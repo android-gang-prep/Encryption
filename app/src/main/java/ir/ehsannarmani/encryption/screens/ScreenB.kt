@@ -1,8 +1,9 @@
 package ir.ehsannarmani.encryption.screens
 
-import android.content.Context
-import android.media.MediaRecorder
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
@@ -46,17 +47,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.ViewModel
 import ir.ehsannarmani.encryption.LocalAppState
 import ir.ehsannarmani.encryption.R
 import kotlinx.coroutines.launch
-import java.io.File
-import kotlin.time.Duration.Companion.seconds
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ehsannarmani.encryption.navigation.Routes
-import ir.ehsannarmani.encryption.utils.rememberQrBitmapPainter
+import ir.ehsannarmani.encryption.utils.qrcode.rememberQrBitmapPainter
 import ir.ehsannarmani.encryption.viewModels.ScreenBViewModel
 import ir.ehsannarmani.encryption.viewModels.VOICE_DURATION_LIMIT
+import kotlinx.coroutines.delay
 import java.util.UUID
 
 
@@ -69,15 +68,30 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
     )
+    val activityResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = {}
+    )
     LaunchedEffect(Unit) {
         permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
     }
     val borderAnimation = remember {
         Animatable(0f)
     }
+
+    // avoid putting key in shared multiple times
+    val qrcodeScanned = remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(qrcodeScanned.value) {
+        if (qrcodeScanned.value){
+            delay(500)
+            qrcodeScanned.value = false
+        }
+    }
     LaunchedEffect(borderAnimation.value) {
-        if (borderAnimation.targetValue == 1f){
-            if (viewModel.shouldRelease){
+        if (borderAnimation.targetValue == 1f) {
+            if (viewModel.shouldRelease) {
                 borderAnimation.snapTo(
                     0f,
                 )
@@ -90,17 +104,29 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
     val qrDialogOpen = remember {
         mutableStateOf(false)
     }
-    if (qrDialogOpen.value){
+
+    val qrcodeScannerDialogOpen = remember {
+        mutableStateOf(false)
+    }
+    val bluetoothPermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = {
+            qrcodeScannerDialogOpen.value = it.values.all { it }
+        }
+    )
+    if (qrDialogOpen.value) {
         Dialog(onDismissRequest = { qrDialogOpen.value = false }) {
-            Column(modifier= Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Image(
-                    modifier=Modifier.clip(RoundedCornerShape(8.dp)),
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)),
                     painter = rememberQrBitmapPainter(
                         content = viewModel.lastPassword,
                         size = 200.dp,
@@ -114,26 +140,75 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
                 Button(onClick = {
                     qrDialogOpen.value = false
                     appState.navController.navigate(Routes.ScreenD.route)
-                }, shape = RoundedCornerShape(8.dp),modifier=Modifier.fillMaxWidth()) {
+                }, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Text(text = "Pick Device")
                 }
             }
         }
     }
+    if (qrcodeScannerDialogOpen.value) {
+        Dialog(onDismissRequest = { qrcodeScannerDialogOpen.value = false }) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .height(300.dp)
+                    .padding(8.dp)
+            ) {
+                Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))) {
+                    QRCodeScannerScreen(onScan = { key ->
+                        if (!qrcodeScanned.value) {
+                            // avoid scanning other qr codes
+                            runCatching {
+                                UUID.fromString(key)
+                            }
+                                .onSuccess {
+                                    Toast.makeText(
+                                        appState.context,
+                                        "Scan success",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    appState
+                                        .sharedPreferences
+                                        .edit()
+                                        .putString("last_key", key)
+                                        .apply()
+                                    qrcodeScannerDialogOpen.value = false
+                                    activityResultLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                                        putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
+                                    })
+                                    qrcodeScanned.value = true
+                                }
+                        }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-        Column(modifier=Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier
-                .size(115.dp)
-                .clip(CircleShape)
-                .rotate(-90f)
-                .border(
-                    3.dp, brush = Brush.sweepGradient(
-                        borderAnimation.value to Color(0xFFFFA726),
-                        borderAnimation.value to Color.Transparent,
-                    ),
-                    CircleShape
-                ), contentAlignment = Alignment.Center){
+
+                    })
+                }
+            }
+        }
+    }
+
+
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(115.dp)
+                    .clip(CircleShape)
+                    .rotate(-90f)
+                    .border(
+                        3.dp, brush = Brush.sweepGradient(
+                            borderAnimation.value to Color(0xFFFFA726),
+                            borderAnimation.value to Color.Transparent,
+                        ),
+                        CircleShape
+                    ), contentAlignment = Alignment.Center
+            ) {
                 Box(modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
@@ -165,11 +240,12 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
                             }
                         }
                         true
-                    }, contentAlignment = Alignment.Center){
+                    }, contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_mic),
                         contentDescription = null,
-                        modifier=Modifier.size(50.dp)
+                        modifier = Modifier.size(50.dp)
                     )
                 }
             }
@@ -180,10 +256,14 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
                 Text(text = "Send")
             }
         }
-        Box(modifier = Modifier
-            .align(Alignment.TopStart)
-            .padding(22.dp)){
-            IconButton(onClick = { /*TODO*/ }) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(22.dp)
+        ) {
+            IconButton(onClick = {
+                bluetoothPermissionsLauncher.launch(bluetoothPermissions)
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_camera),
                     contentDescription = null

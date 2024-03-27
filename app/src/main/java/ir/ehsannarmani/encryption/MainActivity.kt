@@ -14,6 +14,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import ir.ehsannarmani.encryption.navigation.Routes
+import ir.ehsannarmani.encryption.screens.QRCodeScannerScreen
 import ir.ehsannarmani.encryption.screens.ScreenA
 import ir.ehsannarmani.encryption.screens.ScreenB
 import ir.ehsannarmani.encryption.screens.ScreenD

@@ -1,6 +1,7 @@
 package ir.ehsannarmani.encryption
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -14,7 +15,8 @@ import kotlinx.coroutines.CoroutineScope
 class AppState(
     val navController: NavHostController,
     val context:Context,
-    val scope:CoroutineScope
+    val scope:CoroutineScope,
+    val sharedPreferences: SharedPreferences
 ) {
 }
 
@@ -27,7 +29,8 @@ fun rememberAppState():AppState {
         AppState(
             context = context,
             scope = scope,
-            navController = navController
+            navController = navController,
+            sharedPreferences = context.getSharedPreferences("main",Context.MODE_PRIVATE)
         )
     }
 }

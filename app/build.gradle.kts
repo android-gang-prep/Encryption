@@ -80,4 +80,7 @@ dependencies {
     implementation ("androidx.fragment:fragment:1.6.2")
 
     implementation(libs.zxing.core)
+
+    implementation ("com.google.mlkit:barcode-scanning:17.1.0")
+
 }

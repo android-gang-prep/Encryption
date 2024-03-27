@@ -1,4 +1,4 @@
-package ir.ehsannarmani.encryption.utils
+package ir.ehsannarmani.encryption.utils.qrcode
 
 import android.graphics.Bitmap
 import android.graphics.Color
