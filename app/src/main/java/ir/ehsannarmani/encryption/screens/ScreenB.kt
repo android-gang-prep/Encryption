@@ -1,6 +1,9 @@
 package ir.ehsannarmani.encryption.screens
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
 import android.view.MotionEvent
 import android.widget.Toast
@@ -51,14 +54,18 @@ import ir.ehsannarmani.encryption.LocalAppState
 import ir.ehsannarmani.encryption.R
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ir.ehsannarmani.encryption.MainActivity
+import ir.ehsannarmani.encryption.bluetooth.BluetoothBroker.Companion.SERVICE_UUID
 import ir.ehsannarmani.encryption.navigation.Routes
 import ir.ehsannarmani.encryption.utils.qrcode.rememberQrBitmapPainter
 import ir.ehsannarmani.encryption.viewModels.ScreenBViewModel
 import ir.ehsannarmani.encryption.viewModels.VOICE_DURATION_LIMIT
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import java.util.UUID
 
 
+@SuppressLint("MissingPermission")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
@@ -77,6 +84,14 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
     }
     val borderAnimation = remember {
         Animatable(0f)
+    }
+
+    LaunchedEffect(Unit) {
+        Toast.makeText(appState.context, "To send recorded voices, turn on your bluetooth", Toast.LENGTH_SHORT).show()
+        val adapter = (appState.context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
+        if (!adapter.isEnabled){
+            activityResultLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+        }
     }
 
     // avoid putting key in shared multiple times
@@ -128,7 +143,7 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
                 Image(
                     modifier = Modifier.clip(RoundedCornerShape(8.dp)),
                     painter = rememberQrBitmapPainter(
-                        content = viewModel.lastPassword,
+                        content = viewModel.lastPassword+"#"+viewModel.encryptedFileLength,
                         size = 200.dp,
                         padding = (.5).dp
                     ),
@@ -158,10 +173,11 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
             ) {
                 Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))) {
                     QRCodeScannerScreen(onScan = { key ->
+                        val (uuid,voiceSize) = key.split("#")
                         if (!qrcodeScanned.value) {
                             // avoid scanning other qr codes
                             runCatching {
-                                UUID.fromString(key)
+                                UUID.fromString(uuid)
                             }
                                 .onSuccess {
                                     Toast.makeText(
@@ -172,17 +188,28 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
                                     appState
                                         .sharedPreferences
                                         .edit()
-                                        .putString("last_key", key)
+                                        .putString("last_key", uuid)
+                                        .putLong("last_voice_size",voiceSize.toLong())
                                         .apply()
                                     qrcodeScannerDialogOpen.value = false
                                     activityResultLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
                                         putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
                                     })
                                     qrcodeScanned.value = true
+                                    appState.scope.launch(Dispatchers.IO) {
+                                        MainActivity.broker.startServer(onConnect = {
+                                            appState.scope.launch {
+                                                Toast.makeText(
+                                                    appState.context,
+                                                    "Connected",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                appState.navController.navigate(Routes.Transfer.route+"/server")
+                                            }
+                                        })
+                                    }
                                 }
                         }
-
-
                     })
                 }
             }
@@ -251,6 +278,10 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
             }
             Button(onClick = {
                 viewModel.encrypt()
+                appState.sharedPreferences
+                    .edit()
+                    .putString("latest_voice",viewModel.encryptedPath)
+                    .apply()
                 qrDialogOpen.value = true
             }, enabled = voiceReady) {
                 Text(text = "Send")

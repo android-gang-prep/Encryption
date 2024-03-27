@@ -22,6 +22,8 @@ class ScreenBViewModel: ViewModel() {
     val voiceReady = _voiceReady.asStateFlow()
 
     lateinit var lastPassword:String
+    lateinit var encryptedPath:String
+    lateinit var encryptedFileLength:String
 
     fun startRecording(dir:File){
         startTime = System.currentTimeMillis()
@@ -50,7 +52,10 @@ class ScreenBViewModel: ViewModel() {
         EncryptionUtils.encrypt(
             outputFile.path,
             lastPassword
-        )
+        ).also {
+            encryptedPath = it.path
+            encryptedFileLength = it.length().toString()
+        }
         outputFile.delete()
         _voiceReady.update { false }
     }
