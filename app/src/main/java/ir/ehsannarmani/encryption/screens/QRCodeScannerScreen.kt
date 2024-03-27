@@ -64,6 +64,7 @@ fun QRCodeScannerScreen(onScan:(String)->Unit) {
             feature.unbindAll()
         }
     }
+
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
         AndroidView(
             modifier=Modifier.fillMaxSize(),
