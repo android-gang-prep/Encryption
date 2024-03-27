@@ -79,6 +79,10 @@ fun ScreenD(
         (appState.context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager)
             .adapter
     }
+    val activityResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = {}
+    )
 
     val scanning by viewModel.scanning.collectAsState()
     val scanFailure by viewModel.scanFailure.collectAsState()
@@ -89,6 +93,9 @@ fun ScreenD(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = {
             if (it.values.all { it }) {
+                checkBluetoothState(appState.context, requestOn = {
+                    activityResultLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+                })
                 appState.scope.launch {
                     viewModel.registerReceiver(appState.context)
                     delay(100)

@@ -64,6 +64,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import java.util.UUID
 
+fun checkBluetoothState(context: Context,requestOn:()->Unit){
+    val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
+    if (!adapter.isEnabled){
+        Toast.makeText(context, "To send recorded voices, turn on your bluetooth", Toast.LENGTH_SHORT).show()
+        requestOn()
+    }
+}
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalComposeUiApi::class)
@@ -84,14 +91,6 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
     }
     val borderAnimation = remember {
         Animatable(0f)
-    }
-
-    LaunchedEffect(Unit) {
-        Toast.makeText(appState.context, "To send recorded voices, turn on your bluetooth", Toast.LENGTH_SHORT).show()
-        val adapter = (appState.context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-        if (!adapter.isEnabled){
-            activityResultLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-        }
     }
 
     // avoid putting key in shared multiple times
@@ -127,6 +126,10 @@ fun ScreenB(viewModel: ScreenBViewModel = viewModel()) {
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = {
             qrcodeScannerDialogOpen.value = it.values.all { it }
+            checkBluetoothState(appState.context, requestOn = {
+                activityResultLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            })
+
         }
     )
     if (qrDialogOpen.value) {

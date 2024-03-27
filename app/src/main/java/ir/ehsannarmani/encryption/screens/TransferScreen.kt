@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -110,12 +111,14 @@ fun TransferScreen(
                     val fos = FileOutputStream(dirToSave)
                     val buffer = ByteArray(1024)
                     while (true) {
-                        val byteCount = broker.clientSocket?.inputStream?.read(buffer)
-                        if (byteCount == -1) break
+                        try {
+                            val byteCount = broker.clientSocket?.inputStream?.read(buffer)
+                            if (byteCount == -1) break
 
-                        fos.write(buffer, 0, byteCount!!)
-                        totalBytesReceived += byteCount
-                        progress.value = (totalBytesReceived * 100.0f) / voiceSize
+                            fos.write(buffer, 0, byteCount!!)
+                            totalBytesReceived += byteCount
+                            progress.value = (totalBytesReceived * 100.0f) / voiceSize
+                        }catch (_:Exception){}
                     }
                     fos.close()
                     withContext(Dispatchers.Main) {
@@ -126,7 +129,7 @@ fun TransferScreen(
         }
     }
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
