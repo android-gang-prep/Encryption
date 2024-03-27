@@ -32,7 +32,7 @@ class MainActivity : FragmentActivity() {
                 ) {
                     val navController = LocalAppState.current.navController
 
-                    NavHost(navController = navController, startDestination = Routes.ScreenD.route){
+                    NavHost(navController = navController, startDestination = Routes.ScreenA.route){
                         composable(Routes.ScreenA.route){
                             ScreenA()
                         }
